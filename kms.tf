@@ -25,47 +25,23 @@ data "aws_iam_policy_document" "source_bucket_cmk_policy" {
     }
     resources = ["*"]
   }
-
-  statement {
-    sid    = "AllowSESToEncryptMessagesBelongingToThisAccount"
-    effect = "Allow"
-    actions = [
-      "kms:GenerateDataKey*",
-    ]
-    principals {
-      type = "Service"
-      identifiers = [
-        "ses.amazonaws.com"
-      ]
-    }
-    resources = ["*"]
-    condition {
-      test     = "StringEquals"
-      variable = "AWS:SourceArn"
-      values   = ["arn:aws:ses:us-east-1:063198111671:receipt-rule-set/arjun-filter:receipt-rule/save-to-test"]
-
-    }
-    condition {
-      test     = "StringEquals"
-      variable = "AWS:SourceAccount"
-      values   = ["063198111671"]
-
-    }
-  }
 }
 
 resource "aws_kms_key" "destination_bucket_cmk" {
+  count               = var.does_destination_bucket_exist ? 0 : 1
   is_enabled          = true
   enable_key_rotation = false
-  policy              = data.aws_iam_policy_document.destination_bucket_cmk_policy.json
+  policy              = data.aws_iam_policy_document.destination_bucket_cmk_policy[0].json
 }
 
 resource "aws_kms_alias" "destination_bucket_cmk" {
+  count         = var.does_destination_bucket_exist ? 0 : 1
   name          = "alias/${var.prefix}-destination-cmk"
-  target_key_id = aws_kms_key.destination_bucket_cmk.key_id
+  target_key_id = aws_kms_key.destination_bucket_cmk[0].key_id
 }
 
 data "aws_iam_policy_document" "destination_bucket_cmk_policy" {
+  count = var.does_destination_bucket_exist ? 0 : 1
   # Root Access
   statement {
     sid     = "Enable IAM User Permissions"
