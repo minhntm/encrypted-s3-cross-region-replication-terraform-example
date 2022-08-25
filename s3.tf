@@ -21,6 +21,34 @@ resource "aws_s3_bucket" "source_bucket" {
 
 }
 
+data "aws_iam_policy_document" "source_bucket_policy" {
+  statement {
+    sid    = "AllowSESPuts"
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["ses.amazonaws.com"]
+    }
+    actions = [
+      "s3:PutObject"
+    ]
+    resources = [
+      "arn:aws:s3:::${var.source_bucket_name}/*",
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "source_bucket" {
+  provider = aws.us-east-1
+  bucket   = aws_s3_bucket.source_bucket.id
+  policy   = data.aws_iam_policy_document.source_bucket_policy.json
+}
+
 resource "aws_s3_bucket_public_access_block" "source_bucket" {
   provider                = aws.us-east-1
   bucket                  = aws_s3_bucket.source_bucket.id

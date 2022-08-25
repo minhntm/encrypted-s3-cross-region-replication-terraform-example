@@ -25,6 +25,31 @@ data "aws_iam_policy_document" "source_bucket_cmk_policy" {
     }
     resources = ["*"]
   }
+
+  statement {
+    sid    = "AllowSESToEncryptMessagesBelongingToThisAccount"
+    effect = "Allow"
+    actions = [
+      "kms:GenerateDataKey*",
+    ]
+    principals {
+      type = "Service"
+      identifiers = [
+        "ses.amazonaws.com"
+      ]
+    }
+    resources = ["*"]
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceArn"
+      values   = ["arn:aws:ses:us-east-1:${data.aws_caller_identity.current.account_id}:receipt-rule-set/${local.email_receiving_rule_set_name}:receipt-rule/${local.email_receiving_rule_name}"]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+  }
 }
 
 resource "aws_kms_key" "destination_bucket_cmk" {

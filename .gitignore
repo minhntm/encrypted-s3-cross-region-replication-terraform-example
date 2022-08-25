@@ -35,3 +35,4 @@ workload/iggre/integration_logs_to_es/.DS_Store
 *.csv
 terraform.tfvars
 terraform.tfstate
+.terraform
