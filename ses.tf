@@ -27,7 +27,6 @@ resource "aws_ses_receipt_rule" "save_to_s3_rule" {
 
   s3_action {
     bucket_name = var.source_bucket_name
-    kms_key_arn = aws_kms_key.source_bucket_cmk.arn
     position    = 1
   }
 
